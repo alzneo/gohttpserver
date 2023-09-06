@@ -451,7 +451,7 @@ func (s *HTTPStaticServer) hJSONList(w http.ResponseWriter, r *http.Request) {
 			results = results[:50]
 		}
 		for _, item := range results {
-			if filepath.HasPrefix(item.Path, requestPath) {
+			if strings.HasPrefix(item.Path, requestPath) {
 				fileInfoMap[item.Path] = item.Info
 			}
 		}
@@ -538,7 +538,7 @@ func (s *HTTPStaticServer) historyDirSize(dir string) int64 {
 	}
 
 	for _, fitem := range s.indexes {
-		if filepath.HasPrefix(fitem.Path, dir) {
+		if strings.HasPrefix(fitem.Path, dir) {
 			size += fitem.Info.Size()
 		}
 	}
@@ -596,7 +596,7 @@ func (s *HTTPStaticServer) readAccessConf(realPath string) (ac AccessConf) {
 		realPath = filepath.Dir(realPath)
 	}
 	cfgFile := filepath.Join(realPath, YAMLCONF)
-	data, err := ioutil.ReadFile(cfgFile)
+	data, err := os.ReadFile(cfgFile)
 	if err != nil {
 		if os.IsNotExist(err) {
 			return
@@ -632,7 +632,7 @@ func assetsContent(name string) string {
 	if err != nil {
 		panic(err)
 	}
-	data, err := ioutil.ReadAll(fd)
+	data, err := io.ReadAll(fd)
 	if err != nil {
 		panic(err)
 	}
