@@ -391,7 +391,7 @@ type UserControl struct {
 	// Access bool
 	Upload bool
 	Delete bool
-	Token  string
+	Tokens []string
 }
 
 type AccessConf struct {
@@ -423,65 +423,48 @@ func (c *AccessConf) canAccess(fileName string) bool {
 
 func (c *AccessConf) canDeleteByToken(token string) bool {
 	for _, rule := range c.Users {
-		if rule.Token == token {
-			return rule.Delete
+		for _, _token := range rule.Tokens {
+			if token == _token {
+				return rule.Delete
+			}
 		}
 	}
 	return c.Delete
 }
 
 func (c *AccessConf) canDelete(r *http.Request) bool {
-	session, err := store.Get(r, defaultSessionName)
+	tokenCookie, err := r.Cookie("token")
 	if err != nil {
-		return c.Delete
-	}
-	val := session.Values["user"]
-	if val == nil {
-		token := r.FormValue("token")
-		if token != "" {
-			return c.canDeleteByToken(token)
+		tokenForm := r.FormValue("token")
+		if tokenForm != "" {
+			return c.canDeleteByToken(tokenForm)
 		}
 		return c.Delete
 	}
-	userInfo := val.(*UserInfo)
-	for _, rule := range c.Users {
-		if rule.Email == userInfo.Email {
-			return rule.Delete
-		}
-	}
-	return c.Delete
+	return c.canDeleteByToken(tokenCookie.Value)
 }
 
 func (c *AccessConf) canUploadByToken(token string) bool {
 	for _, rule := range c.Users {
-		if rule.Token == token {
-			return rule.Upload
+		for _, _token := range rule.Tokens {
+			if token == _token {
+				return rule.Upload
+			}
 		}
 	}
 	return c.Upload
 }
 
 func (c *AccessConf) canUpload(r *http.Request) bool {
-	token := r.FormValue("token")
-	if token != "" {
-		return c.canUploadByToken(token)
-	}
-	session, err := store.Get(r, defaultSessionName)
+	tokenCookie, err := r.Cookie("token")
 	if err != nil {
-		return c.Upload
-	}
-	val := session.Values["user"]
-	if val == nil {
-		return c.Upload
-	}
-	userInfo := val.(*UserInfo)
-
-	for _, rule := range c.Users {
-		if rule.Email == userInfo.Email {
-			return rule.Upload
+		tokenForm := r.FormValue("token")
+		if tokenForm != "" {
+			return c.canUploadByToken(tokenForm)
 		}
+		return c.Upload
 	}
-	return c.Upload
+	return c.canUploadByToken(tokenCookie.Value)
 }
 
 func (s *HTTPStaticServer) hJSONList(w http.ResponseWriter, r *http.Request) {
