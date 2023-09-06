@@ -129,7 +129,7 @@ func ExtractFromZip(zipFile, path string, w io.Writer) (err error) {
 		}
 		return
 	}
-	return fmt.Errorf("File %s not found", strconv.Quote(path))
+	return fmt.Errorf("file %s not found", strconv.Quote(path))
 }
 
 func unzipFile(filename, dest string) error {

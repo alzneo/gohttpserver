@@ -8,9 +8,7 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
-	"mime"
 	"net/http"
-	"net/url"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -61,10 +59,6 @@ type HTTPStaticServer struct {
 }
 
 func NewHTTPStaticServer(root string) *HTTPStaticServer {
-	// if root == "" {
-	// 	root = "./"
-	// }
-	// root = filepath.ToSlash(root)
 	root = filepath.ToSlash(filepath.Clean(root))
 	if !strings.HasSuffix(root, "/") {
 		root = root + "/"
@@ -347,32 +341,6 @@ func (s *HTTPStaticServer) hZip(w http.ResponseWriter, r *http.Request) {
 	CompressToZip(w, s.getRealPath(r))
 }
 
-func (s *HTTPStaticServer) hUnzip(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	zipPath, path := vars["zip_path"], vars["path"]
-	ctype := mime.TypeByExtension(filepath.Ext(path))
-	if ctype != "" {
-		w.Header().Set("Content-Type", ctype)
-	}
-	err := ExtractFromZip(filepath.Join(s.Root, zipPath), path, w)
-	if err != nil {
-		http.Error(w, err.Error(), 500)
-		return
-	}
-}
-
-func combineURL(r *http.Request, path string) *url.URL {
-	return &url.URL{
-		Scheme: r.URL.Scheme,
-		Host:   r.Host,
-		Path:   path,
-	}
-}
-
-func (s *HTTPStaticServer) hFileOrDirectory(w http.ResponseWriter, r *http.Request) {
-	http.ServeFile(w, r, s.getRealPath(r))
-}
-
 type HTTPFileInfo struct {
 	Name    string `json:"name"`
 	Path    string `json:"path"`
@@ -387,7 +355,6 @@ type AccessTable struct {
 }
 
 type UserControl struct {
-	Email string
 	// Access bool
 	Upload bool
 	Delete bool
@@ -710,7 +677,7 @@ func renderHTML(w http.ResponseWriter, name string, v interface{}) {
 
 func checkFilename(name string) error {
 	if strings.ContainsAny(name, "\\/:*<>|") {
-		return errors.New("Name should not contains \\/:*<>|")
+		return errors.New("name should not contains \\/:*<>|")
 	}
 	return nil
 }

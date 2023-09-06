@@ -9,6 +9,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"path"
 	"regexp"
 	"runtime"
 	"strconv"
@@ -18,7 +19,6 @@ import (
 	"github.com/alecthomas/kingpin"
 	accesslog "github.com/codeskyblue/go-accesslog"
 	"github.com/go-yaml/yaml"
-	"github.com/goji/httpauth"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 )
@@ -29,7 +29,6 @@ type Configure struct {
 	Port     int      `yaml:"port"`
 	Root     string   `yaml:"root"`
 	Prefix   string   `yaml:"prefix"`
-	HTTPAuth string   `yaml:"httpauth"`
 	Cors     bool     `yaml:"cors"`
 	Theme    string   `yaml:"theme"`
 	XHeaders bool     `yaml:"xheaders"`
@@ -37,13 +36,6 @@ type Configure struct {
 	Delete   bool     `yaml:"delete"`
 	Title    string   `yaml:"title"`
 	Debug    bool     `yaml:"debug"`
-	Auth     struct {
-		Type   string `yaml:"type"` // openid|http|github
-		OpenID string `yaml:"openid"`
-		HTTP   string `yaml:"http"`
-		ID     string `yaml:"id"`     // for oauth2
-		Secret string `yaml:"secret"` // for oauth2
-	} `yaml:"auth"`
 }
 
 type httpLogger struct{}
@@ -97,8 +89,6 @@ func parseFlags() error {
 	kingpin.Flag("prefix", "url prefix, eg /foo").StringVar(&gcfg.Prefix)
 	kingpin.Flag("port", "listen port, default 8000").IntVar(&gcfg.Port)
 	kingpin.Flag("addr", "listen address, eg 127.0.0.1:8000").Short('a').StringVar(&gcfg.Addr)
-	kingpin.Flag("auth-type", "Auth type <http|openid>").StringVar(&gcfg.Auth.Type)
-	kingpin.Flag("auth-http", "HTTP basic auth (ex: user:pass)").StringVar(&gcfg.Auth.HTTP)
 	kingpin.Flag("theme", "web theme, one of <black|green>").StringVar(&gcfg.Theme)
 	kingpin.Flag("upload", "enable upload support").BoolVar(&gcfg.Upload)
 	kingpin.Flag("delete", "enable delete support").BoolVar(&gcfg.Delete)
@@ -155,21 +145,10 @@ func main() {
 	ss.Title = gcfg.Title
 	ss.Upload = gcfg.Upload
 	ss.Delete = gcfg.Delete
-	ss.AuthType = gcfg.Auth.Type
 
 	var hdlr http.Handler = ss
 
 	hdlr = accesslog.NewLoggingHandler(hdlr, logger)
-
-	// HTTP Basic Authentication
-	userpass := strings.SplitN(gcfg.Auth.HTTP, ":", 2)
-	switch gcfg.Auth.Type {
-	case "http":
-		if len(userpass) == 2 {
-			user, pass := userpass[0], userpass[1]
-			hdlr = httpauth.SimpleBasicAuth(user, pass)(hdlr)
-		}
-	}
 
 	// CORS
 	if gcfg.Cors {
