@@ -198,6 +198,20 @@ func main() {
 		w.Header().Set("Content-Length", fmt.Sprintf("%d", len(data)))
 		w.Write(data)
 	})
+
+	router.PathPrefix("/-/login/").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		token := path.Base(r.URL.Path)
+		//token := r.FormValue("token")
+		if token != "" {
+			cookieToken := http.Cookie{}
+			cookieToken.Name = "token"
+			cookieToken.Value = token
+			cookieToken.Path = "/"
+			http.SetCookie(w, &cookieToken)
+			http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+		}
+	})
+
 	router.PathPrefix("/").Handler(hdlr)
 
 	if gcfg.Addr == "" {
