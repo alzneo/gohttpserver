@@ -514,6 +514,15 @@ func (c *AccessConf) canAccess(fileName string) bool {
 	return true
 }
 
+func (c *AccessConf) canDeleteByToken(token string) bool {
+	for _, rule := range c.Users {
+		if rule.Token == token {
+			return rule.Delete
+		}
+	}
+	return c.Delete
+}
+
 func (c *AccessConf) canDelete(r *http.Request) bool {
 	session, err := store.Get(r, defaultSessionName)
 	if err != nil {
@@ -521,6 +530,10 @@ func (c *AccessConf) canDelete(r *http.Request) bool {
 	}
 	val := session.Values["user"]
 	if val == nil {
+		token := r.FormValue("token")
+		if token != "" {
+			return c.canDeleteByToken(token)
+		}
 		return c.Delete
 	}
 	userInfo := val.(*UserInfo)
