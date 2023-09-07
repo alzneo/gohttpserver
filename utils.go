@@ -5,31 +5,6 @@ import (
 	"os"
 )
 
-func SublimeContains(s, substr string) bool {
-	rs, rsubstr := []rune(s), []rune(substr)
-	if len(rsubstr) > len(rs) {
-		return false
-	}
-
-	var ok = true
-	var i, j = 0, 0
-	for ; i < len(rsubstr); i++ {
-		found := -1
-		for ; j < len(rs); j++ {
-			if rsubstr[i] == rs[j] {
-				found = j
-				break
-			}
-		}
-		if found == -1 {
-			ok = false
-			break
-		}
-		j += 1
-	}
-	return ok
-}
-
 // getLocalIP returns the non loopback local IP of the host
 func getLocalIP() string {
 	addrs, err := net.InterfaceAddrs()

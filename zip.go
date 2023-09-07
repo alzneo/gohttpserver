@@ -3,16 +3,15 @@ package main
 import (
 	"archive/zip"
 	"bytes"
-	"fmt"
+
 	"io"
 	"net/http"
 	"os"
 	"path/filepath"
 	"runtime"
-	"strconv"
+
 	"strings"
 
-	dkignore "github.com/codeskyblue/dockerignore"
 	"golang.org/x/text/encoding/simplifiedchinese"
 )
 
@@ -96,39 +95,6 @@ func CompressToZip(w http.ResponseWriter, rootDir string) {
 		}
 		return zw.Add(zipPath, path)
 	})
-}
-
-func ExtractFromZip(zipFile, path string, w io.Writer) (err error) {
-	cf, err := zip.OpenReader(zipFile)
-	if err != nil {
-		return
-	}
-	defer cf.Close()
-
-	rd := io.NopCloser(bytes.NewBufferString(path))
-	patterns, err := dkignore.ReadIgnore(rd)
-	if err != nil {
-		return
-	}
-
-	for _, file := range cf.File {
-		matched, _ := dkignore.Matches(file.Name, patterns)
-		if !matched {
-			continue
-		}
-		rc, er := file.Open()
-		if er != nil {
-			err = er
-			return
-		}
-		defer rc.Close()
-		_, err = io.Copy(w, rc)
-		if err != nil {
-			return
-		}
-		return
-	}
-	return fmt.Errorf("file %s not found", strconv.Quote(path))
 }
 
 func unzipFile(filename, dest string) error {
