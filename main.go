@@ -35,7 +35,6 @@ type Configure struct {
 	Upload   bool     `yaml:"upload"`
 	Delete   bool     `yaml:"delete"`
 	Title    string   `yaml:"title"`
-	Debug    bool     `yaml:"debug"`
 }
 
 type httpLogger struct{}
@@ -88,7 +87,6 @@ func parseFlags() error {
 	kingpin.Flag("delete", "enable delete support").BoolVar(&gcfg.Delete)
 	kingpin.Flag("xheaders", "used when behind nginx").BoolVar(&gcfg.XHeaders)
 	kingpin.Flag("cors", "enable cross-site HTTP request").BoolVar(&gcfg.Cors)
-	kingpin.Flag("debug", "enable debug mode").BoolVar(&gcfg.Debug)
 	kingpin.Flag("title", "server title").StringVar(&gcfg.Title)
 
 	kingpin.Parse() // first parse conf
@@ -120,10 +118,6 @@ func fixPrefix(prefix string) string {
 func main() {
 	if err := parseFlags(); err != nil {
 		log.Fatal(err)
-	}
-	if gcfg.Debug {
-		data, _ := yaml.Marshal(gcfg)
-		fmt.Printf("--- config ---\n%s\n", string(data))
 	}
 	log.SetFlags(log.Lshortfile | log.LstdFlags)
 
