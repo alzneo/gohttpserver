@@ -48,10 +48,8 @@ var (
 	gcfg   = Configure{}
 	logger = httpLogger{}
 
-	VERSION   = "unknown"
-	BUILDTIME = "unknown time"
-	GITCOMMIT = "unknown git commit"
-	SITE      = "https://github.com/codeskyblue/gohttpserver"
+	VERSION = "unknown"
+	SITE    = "https://github.com/alzneo/gohttpserver"
 )
 
 func versionMessage() string {
@@ -59,16 +57,12 @@ func versionMessage() string {
   Version:        {{.Version}}
   Go version:     {{.GoVersion}}
   OS/Arch:        {{.OSArch}}
-  Git commit:     {{.GitCommit}}
-  Built:          {{.Built}}
   Site:           {{.Site}}`))
 	buf := bytes.NewBuffer(nil)
 	t.Execute(buf, map[string]interface{}{
 		"Version":   VERSION,
 		"GoVersion": runtime.Version(),
 		"OSArch":    runtime.GOOS + "/" + runtime.GOARCH,
-		"GitCommit": GITCOMMIT,
-		"Built":     BUILDTIME,
 		"Site":      SITE,
 	})
 	return buf.String()
